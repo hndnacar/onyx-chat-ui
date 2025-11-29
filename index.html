@@ -1,43 +1,192 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-    <title>BI Karar Destek Asistanı</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BI Karar Destek Asistanı | Proje 2</title>
+    <style>
+        /* Modern ve Temiz CSS */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6; /* Açık Gri Arka Plan */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 700px;
+            background-color: #ffffff; /* Beyaz Kart */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Hafif Gölge */
+            padding: 25px;
+        }
+
+        h2 {
+            color: #1abc9c; /* Vurgu Rengi */
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #cevap-alani {
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+        }
+
+        .user-message {
+            background-color: #d1e7dd; /* Kullanıcı mesajı için açık yeşil */
+            color: #155724;
+            padding: 10px;
+            border-radius: 15px 15px 0 15px;
+            margin-bottom: 10px;
+            float: right;
+            clear: both;
+            max-width: 80%;
+        }
+
+        .agent-response {
+            background-color: #f8f9fa; /* Ajan cevabı için açık gri */
+            color: #343a40;
+            padding: 10px;
+            border-radius: 15px 15px 15px 0;
+            margin-bottom: 10px;
+            float: left;
+            clear: both;
+            max-width: 80%;
+            white-space: pre-wrap; /* Tablo ve formatı korur */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Giriş Alanı ve Buton */
+        #soruForm {
+            display: flex;
+            gap: 10px;
+        }
+
+        #soru {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: none;
+            font-size: 16px;
+        }
+
+        #gonderButton {
+            background-color: #1abc9c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        #gonderButton:hover {
+            background-color: #16a085;
+        }
+        
+        #gonderButton:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
-    <h2>İş Zekası Ajanına Soru Sorun</h2>
-    <form id="soruForm">
-        <textarea id="soru" placeholder="Örn: 'Yüksek Gelirli Müşteri' tanımına göre durumumuz nedir?" rows="4" cols="50" required></textarea><br>
-        <button type="submit">Soruyu Gönder</button>
-    </form>
-    <div id="cevap" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap;">
-        Ajan Cevabı Burada Görünecek...
+    <div class="chat-container">
+        <h2>📊 Proje 2 | İş Zekası Karar Destek Asistanı</h2>
+        <div id="cevap-alani">
+            <div class="agent-response">Merhaba! Ben Şirketinizin BI Analistiyim. Lütfen dosyaları analiz etmemi istediğiniz stratejik soruyu yazın (Örn: "Marmara Bölgesi hedef takibi nedir?").</div>
+        </div>
+
+        <form id="soruForm">
+            <textarea id="soru" placeholder="Sorunuzu buraya yazın..." rows="2" required></textarea>
+            <button type="submit" id="gonderButton">Gönder</button>
+        </form>
     </div>
 
     <script>
+        // SİZİN N8N WEBHOOK URL'nizi buraya yapıştırın.
+        const webhookUrl = "https://hndn.app.n8n.cloud/webhook-test/5c464b9c-c2c3-49bb-a474-dd4f1b1b0a5a"; 
+
         document.getElementById('soruForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const webhookUrl = "https://hndn.app.n8n.cloud/webhook-test/5c464b9c-c2c3-49bb-a474-dd4f1b1b0a5a"; 
-            const soru = document.getElementById('soru').value;
-            const cevapDiv = document.getElementById('cevap');
+            const soruInput = document.getElementById('soru');
+            const cevapAlani = document.getElementById('cevap-alani');
+            const gonderButton = document.getElementById('gonderButton');
+            const soru = soruInput.value.trim();
             
-            cevapDiv.textContent = 'Analiz yapılıyor, lütfen bekleyin...';
+            if (!soru) return;
 
+            // Butonu devre dışı bırak ve yükleniyor durumunu göster
+            gonderButton.disabled = true;
+            gonderButton.textContent = 'Analiz Ediliyor...';
+
+            // Kullanıcı mesajını ekle
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'user-message';
+            userMsgDiv.textContent = soru;
+            cevapAlani.appendChild(userMsgDiv);
+            
+            // Cevap alanını aşağı kaydır
+            cevapAlani.scrollTop = cevapAlani.scrollHeight;
+
+            // Ajanın yüklenme mesajını ekle
+            const loadingMsgDiv = document.createElement('div');
+            loadingMsgDiv.className = 'agent-response';
+            loadingMsgDiv.textContent = 'Ajan analiz ediyor...';
+            cevapAlani.appendChild(loadingMsgDiv);
+            cevapAlani.scrollTop = cevapAlani.scrollHeight;
+
+            // Fetch API ile n8n'e POST isteği gönderme
             fetch(webhookUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // n8n'in beklediği "soru" anahtarıyla veriyi gönderme
                 body: JSON.stringify({ soru: soru }) 
             })
-            .then(response => response.text()) // Yanıtı metin olarak al
+            .then(response => response.text()) 
             .then(data => {
-                cevapDiv.textContent = "Ajan Cevabı:\n" + data;
+                // Yüklenme mesajını kaldır
+                cevapAlani.removeChild(loadingMsgDiv);
+                
+                // Ajanın cevabını ekle
+                const agentMsgDiv = document.createElement('div');
+                agentMsgDiv.className = 'agent-response';
+                // HTML formatını koruması için data'yı direkt textContent olarak atıyoruz.
+                agentMsgDiv.innerHTML = data.replace(/\n/g, '<br>'); // Yeni satırları <br> ile değiştir
+                cevapAlani.appendChild(agentMsgDiv);
+
+                // Temizlik
+                soruInput.value = '';
             })
             .catch(error => {
-                cevapDiv.textContent = 'Hata oluştu: ' + error;
+                cevapAlani.removeChild(loadingMsgDiv);
+                const errorMsgDiv = document.createElement('div');
+                errorMsgDiv.className = 'agent-response';
+                errorMsgDiv.textContent = 'Hata: Bağlantı veya API hatası oluştu. Konsolu kontrol edin.';
+                cevapAlani.appendChild(errorMsgDiv);
                 console.error('Hata:', error);
+            })
+            .finally(() => {
+                // Butonu tekrar aktif et ve metni geri getir
+                gonderButton.disabled = false;
+                gonderButton.textContent = 'Gönder';
+                cevapAlani.scrollTop = cevapAlani.scrollHeight;
             });
         });
     </script>

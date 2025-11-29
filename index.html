@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BI Karar Destek Asistanı</title>
+</head>
+<body>
+    <h2>İş Zekası Ajanına Soru Sorun</h2>
+    <form id="soruForm">
+        <textarea id="soru" placeholder="Örn: 'Yüksek Gelirli Müşteri' tanımına göre durumumuz nedir?" rows="4" cols="50" required></textarea><br>
+        <button type="submit">Soruyu Gönder</button>
+    </form>
+    <div id="cevap" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap;">
+        Ajan Cevabı Burada Görünecek...
+    </div>
+
+    <script>
+        document.getElementById('soruForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const webhookUrl = "https://hndn.app.n8n.cloud/webhook-test/5c464b9c-c2c3-49bb-a474-dd4f1b1b0a5a"; 
+            const soru = document.getElementById('soru').value;
+            const cevapDiv = document.getElementById('cevap');
+            
+            cevapDiv.textContent = 'Analiz yapılıyor, lütfen bekleyin...';
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // n8n'in beklediği "soru" anahtarıyla veriyi gönderme
+                body: JSON.stringify({ soru: soru }) 
+            })
+            .then(response => response.text()) // Yanıtı metin olarak al
+            .then(data => {
+                cevapDiv.textContent = "Ajan Cevabı:\n" + data;
+            })
+            .catch(error => {
+                cevapDiv.textContent = 'Hata oluştu: ' + error;
+                console.error('Hata:', error);
+            });
+        });
+    </script>
+</body>
+</html>
